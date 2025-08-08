@@ -1,0 +1,20 @@
+FROM ubuntu:22.04 as builder
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential git ca-certificates wget unzip \
+    libreadline-dev libncurses5-dev libpcre3-dev libssl-dev perl make && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY . /app
+
+# build skynet if vendor exists
+RUN if [ -d 3rd/skynet ]; then cd 3rd/skynet && make linux; fi
+
+FROM ubuntu:22.04
+WORKDIR /app
+COPY --from=builder /app /app
+
+EXPOSE 8004 8088
+
+CMD ["/bin/bash", "-lc", "if [ -x 3rd/skynet/skynet ]; then exec 3rd/skynet/skynet config/server.lua; else echo 'Please mount skynet binary or build submodule 3rd/skynet'; sleep infinity; fi" ]
