@@ -1,0 +1,46 @@
+version: "3"
+
+networks:
+  network:
+    ipam:
+      driver: default
+      config:
+        - subnet: '177.8.0.0/16'
+
+services:
+  mysql:
+    build:
+      context: ../
+      dockerfile: ./Dockerfile-mysql
+    container_name: skynet-mysql
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - ../mysql_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456abc
+      - MYSQL_USER=slg
+      - MYSQL_PASSWORD=123456abc
+    networks:
+      network:
+        ipv4_address: 177.8.0.11
+
+  skynet:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile-skynet
+    container_name: slg-skynet
+    restart: always
+    ports:
+      - '8004:8004' # gate
+      - '8088:8088' # http
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+    depends_on:
+      - mysql
+    networks:
+      network:
+        ipv4_address: 177.8.0.21

@@ -1,0 +1,6 @@
+3rd/skynet/
+run/
+logs/
+*.pid
+*.log
+.DS_Store
